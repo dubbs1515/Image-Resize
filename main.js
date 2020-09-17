@@ -1,70 +1,102 @@
-const { app, BrowserWindow, Menu, globalShortcut } = require('electron');
+const { app, BrowserWindow, Menu } = require("electron");
 
 // Environment (dev/production)
-process.env.NODE_ENV = 'development';
+process.env.NODE_ENV = "development";
 
-const isDev = process.env.NODE_ENV !== 'production' ? true : false;
-const isMac = process.env.NODE_ENV === 'darwin' ? true : false;
-const isWin = process.env.NODE_ENV === 'win32' ? true : false;
+const isDev = process.env.NODE_ENV !== "production" ? true : false;
+const isMac = process.env.NODE_ENV === "darwin" ? true : false;
+const isWin = process.env.NODE_ENV === "win32" ? true : false;
 
 let mainWindow;
+let aboutWindow;
 
 function createMainWindow() {
 	mainWindow = new BrowserWindow({
-		title: 'ImageShrink',
+		title: "ImageShrink",
 		width: 500,
 		height: 600,
 		icon: `${__dirname}/assets/icons/Icon_256x256.png`,
-		backgroundColor: 'white',
+		backgroundColor: "white",
 		//resizable: isDev,
 	});
 
-	//mainWindow.loadURL(`https://twitter.com`);
-	//mainWindow.loadURL(`file://${__dirname}/app/index.html`);
-	mainWindow.loadFile('./app/index.html');
+	mainWindow.loadFile("./app/index.html");
 }
 
-app.on('ready', () => {
+function createAboutWindow() {
+	aboutWindow = new BrowserWindow({
+		title: "About ImageShrink",
+		width: 300,
+		height: 300,
+		icon: "./assets/icons/Icon_256x256.png",
+		resizable: false,
+		backgroundColor: "white",
+	});
+
+	aboutWindow.loadFile("./app/about.html");
+}
+
+app.on("ready", () => {
 	createMainWindow();
 
 	const mainMenu = Menu.buildFromTemplate(menu);
 	Menu.setApplicationMenu(mainMenu);
 
-	globalShortcut.register('CmdOrCtrl+R', () => mainWindow.reload());
-	globalShortcut.register(isMac ? 'Command+Alt+I' : 'Ctrl+Shift+I', () =>
-		mainWindow.toggleDevTools()
-	);
-
-	mainWindow.on('closed', () => (mainWindow = null));
+	mainWindow.on("closed", () => (mainWindow = null));
 });
 
 const menu = [
-	...(isMac ? [{ role: 'appMenu' }] : []),
+	...(isMac
+		? [
+				{
+					label: app.name,
+					submenu: [
+						{
+							label: "About",
+							click: createAboutWindow,
+						},
+					],
+				},
+		  ]
+		: []),
 	{
-		role: 'fileMenu',
+		role: "fileMenu",
 	},
+	...(!isMac
+		? [
+				{
+					label: "Help",
+					submenu: [
+						{
+							label: "About",
+							click: createAboutWindow,
+						},
+					],
+				},
+		  ]
+		: []),
 	...(isDev
 		? [
 				{
-					label: 'Developer',
+					label: "Developer",
 					submenu: [
-						{ role: 'reload' },
-						{ role: 'forcereload' },
-						{ type: 'separator' },
-						{ role: 'toggledevtools' },
+						{ role: "reload" },
+						{ role: "forcereload" },
+						{ type: "separator" },
+						{ role: "toggledevtools" },
 					],
 				},
 		  ]
 		: []),
 ];
 
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
 	if (!isMac) {
 		app.quit();
 	}
 });
 
-app.on('activate', () => {
+app.on("activate", () => {
 	if (BrowserWindow.getAllWindows().length === 0) {
 		createMainWindow();
 	}
